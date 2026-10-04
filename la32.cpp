@@ -191,6 +191,7 @@ la32_t::la32_t(mt32_t *_mt32) : mt32(_mt32)
 
 void la32_t::write(uint16_t address, uint8_t data)
 {
+    //printf("la32wr: %lld %x %x\n", la32_cycles, address, data);
     if ((address & 0x1c0) == 0x1c0)
     {
         switch (address & 3)
@@ -219,6 +220,8 @@ void la32_t::write(uint16_t address, uint8_t data)
             uint32_t dest_v = (address >> 1) & 31;
             if (dest_r < 6)
                 reg_file[dest_r][dest_v] = (data << 8) | reg_data_l;
+            //if (dest_r == 0)
+            //    printf("la32wr: %lf %x %x\n", la32_cycles / (256.0*32000.0), address, (data << 8) | reg_data_l);
 
             //if (dest_r == 3)
             //    printf("pitch %x %x %x %x %x\n", *(uint16_t*)&mt32->ram[0x2fc0 + dest_v * 2], *(uint16_t*)&mt32->ram[0x3080 + dest_v * 2], *(uint16_t*)&mt32->ram[0x3040 + dest_v * 2], dest_v, (data << 8) | reg_data_l);
@@ -432,12 +435,12 @@ void la32_t::clock(uint32_t samples)
                     val2 |= sum & 0x3ff0000;
                 if (tv == 1 && (w46 & 1) != 0)
                     val2 |= (reg_1c3 & 0xf0) << 18;
-                if (status)
+                if (status) {
                     val2 |= dest << 18;
+                    val2 &= ~0xffff;
+                }
 
                 tvv[tv] = ram2[tv][i] = val2 & 0x3ffffff;
-                if (status)
-                    tvv[tv] &= ~0xffff;
 
                 if (status && !int_state)
                 {
@@ -655,7 +658,7 @@ void la32_t::clock(uint32_t samples)
                             s1d |= 0x2000;
                     }
 
-                    uint32_t t23 = s1d + t27;
+                    uint32_t t23 = s1d + t27 + 1;
                     uint32_t t23c = (t23 >> 14) & 1;
                     t23 &= 0x3fff;
 
@@ -683,7 +686,7 @@ void la32_t::clock(uint32_t samples)
                     }
 
                     uint32_t t28 = mode ? t27 : t22;
-                    uint32_t t25 = s2d + t28;
+                    uint32_t t25 = s2d + t28 + 1;
                     uint32_t t25c = (t25 >> 14) & 1;
                     t25 &= 0x3fff;
 
@@ -717,7 +720,7 @@ void la32_t::clock(uint32_t samples)
                         int32_t ot4 = (o1 << 17) >> 17;
                         int32_t ot3 = (o2 << 17) >> 17;
                         int32_t c = (ot4 & 1) != 0;
-                        oo = (ot3 >> 1) + (ot4 >> 1) + c;
+                        oo = ot3 + (ot4 >> 1) + c;
 
                         if (ring)
                         {
@@ -1006,6 +1009,7 @@ void la32_t::clock(uint32_t samples)
                         int w354 = w353 && (w348 & 0x800) != 0;
                         int w518 = w354 ? (l4_ >> 14) & 15 : 0;
                         t45 |= w518 << 9;
+                        t45 |= 0x2000;
                     }
                     else
                     {
@@ -1069,7 +1073,7 @@ void la32_t::clock(uint32_t samples)
                     int32_t ot4 = (o1 << 17) >> 17;
                     int32_t ot3 = (o2 << 17) >> 17;
                     int32_t c = (ot4 & 1) != 0;
-                    oo = (ot3 >> 1) + (ot4 >> 1) + c;
+                    oo = ot3 + (ot4 >> 1) + c;
 
                     if (ring)
                     {
@@ -1172,8 +1176,8 @@ void la32_t::clock(uint32_t samples)
 
         int32_t s_l = accum[oddeven][2] + accum[oddeven][3];
         int32_t s_r = accum[oddeven][6] + accum[oddeven][7];
-        s_l *= 3;
-        s_r *= 3;
+        s_l *= 2;
+        s_r *= 2;
 
         if (s_l < -32768)
             s_l = -32768;

@@ -32,10 +32,10 @@ private:
 
     uint64_t la32_cycles;
 
-    uint8_t reg_1c0;
-    uint8_t reg_1c1;
-    uint8_t reg_1c2;
-    uint8_t reg_1c3;
+    uint8_t reg_1c0; // 0
+    uint8_t reg_1c1; // 192
+    uint8_t reg_1c2; // 0
+    uint8_t reg_1c3; // 0
     uint8_t reg_data_l;
     uint16_t reg_file[6][32];
     uint32_t ram2[3][32];

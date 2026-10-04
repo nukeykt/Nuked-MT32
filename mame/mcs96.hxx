@@ -931,7 +931,7 @@ void mcs96_device::mulub_indexed_3e_full()
 	OP2 = read_pc();
 	OP3 = read_pc();
 	TMP = any_r8(OP1);
-	TMP = reg_r8(OP2);
+	TMP *= reg_r8(OP2);
 	reg_w16(OP3, TMP);
 	next(OPI & 0x01 ? 21 : 20);
 }
