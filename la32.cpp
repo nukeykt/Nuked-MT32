@@ -1089,14 +1089,17 @@ void la32_t::clock(uint32_t samples)
                         prev = oo;
                 }
 
-                int32_t ot1 = mul(oo, pan1);
-                accum[oddeven][outch] += ot1 >> 7;
+                if (!(ring && (i & 1) == 0))
+                {
+                    int32_t ot1 = mul(oo, pan1);
+                    accum[oddeven][outch] += ot1 >> 7;
 
-                int32_t c = (~ot1 >> 6) & 1;
-                int32_t ot2 = oo + (~ot1 >> 7) + c;
+                    int32_t c = (~ot1 >> 6) & 1;
+                    int32_t ot2 = oo + (~ot1 >> 7) + c;
 
-                if ((ctrl & 7) != 7)
-                    accum[oddeven][outch | 4] += ot2;
+                    if ((ctrl & 7) != 7)
+                        accum[oddeven][outch | 4] += ot2;
+                }
             }
 
             if ((i & 7) == 1 || (i & 7) == 2 || (i & 7) == 3)
