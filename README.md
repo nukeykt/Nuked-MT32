@@ -1,9 +1,11 @@
 # Nuked-MT32
 
-Roland MT-32 emulator I worked in late 2024/early 2025, don't think I'll continue to work on this, so I'm releasing it as is!
+Low-level Roland MT-32 emulator (wip)
 
 Uses MCS-96 emulator from Olivier Galibert/MAME.
 
-LA32 emulator is based on the decap of John McMaster. I think there're still some bugs in its implementation.
+LA32 emulator is based on the decap of John McMaster.
 
-Reverb chip is not emulated at all, as no decap of it is available.
+Reverb chip emulator is based on the decap of InfoSecDJ.
+
+Extra thanks to giulioz for sending the reverb chip for decapping and finding bugs in LA32 core.
