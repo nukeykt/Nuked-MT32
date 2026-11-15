@@ -1192,11 +1192,20 @@ void la32_t::clock(uint32_t samples)
             }
         }
 
+        for (int i = 0; i < 8; i++) {
+            int32_t v = accum[oddeven][i];
+            if (v > 32767)
+                v = 32767;
+            else if (v < -32768)
+                v = -32768;
+            accum[oddeven][i] = v;
+        }
+
         int16_t reverb[2];
         mt32->rv2->get_samples(reverb);
 
-        int32_t s_l = output_expand(accum[oddeven][2]) + output_expand(accum[oddeven][3]) + reverb[1] * 17 / 25;
-        int32_t s_r = output_expand(accum[oddeven][6]) + output_expand(accum[oddeven][7]) + reverb[0] * 17 / 25;
+        int32_t s_l = output_expand(accum[oddeven^1][2]) + output_expand(accum[oddeven^1][3]) + reverb[1] * 17 / 25;
+        int32_t s_r = output_expand(accum[oddeven^1][6]) + output_expand(accum[oddeven^1][7]) + reverb[0] * 17 / 25;
 
         int32_t vol = 255 - mt32->mcu->pwm_value();
 
