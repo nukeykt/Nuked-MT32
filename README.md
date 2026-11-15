@@ -29,7 +29,7 @@ ROM images should be named as such:
 - T -> Volume
 - A -> Part 4
 - S -> Part 5
-- D -> Part 6
+- D -> Part R
 - F -> Sound
 - G -> Master volume
 - \+ and \- -> Volume knob
