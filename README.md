@@ -32,4 +32,4 @@ ROM images should be named as such:
 - D -> Part 6
 - F -> Sound
 - G -> Master volume
-- + and - -> Volume knob
+- \+ and \- -> Volume knob
