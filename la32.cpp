@@ -1198,6 +1198,11 @@ void la32_t::clock(uint32_t samples)
         int32_t s_l = output_expand(accum[oddeven][2]) + output_expand(accum[oddeven][3]) + reverb[1] * 17 / 25;
         int32_t s_r = output_expand(accum[oddeven][6]) + output_expand(accum[oddeven][7]) + reverb[0] * 17 / 25;
 
+        int32_t vol = 255 - mt32->mcu->pwm_value();
+
+        s_l = s_l * vol / 255;
+        s_r = s_r * vol / 255;
+
         if (s_l < -32768)
             s_l = -32768;
         else if (s_l > 32767)

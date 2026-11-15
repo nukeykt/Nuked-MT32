@@ -24,12 +24,15 @@
 
 SDL_Window* window;
 SDL_GLContext gl_context;
+SDL_mutex* mutex;
 
 mt32_t mt32;
 
 void mt32_callback(void*, Uint8* stream, int len)
 {
+    SDL_LockMutex(mutex);
     mt32.clock(len / 4);
+    SDL_UnlockMutex(mutex);
     memcpy(stream, mt32.samples, len);
 }
 
@@ -77,7 +80,9 @@ int main(int argc, char **argv)
 
     window = SDL_CreateWindow("MT-32", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, w, h, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
 
-    if (!window)
+    mutex = SDL_CreateMutex();
+
+    if (!window || !mutex)
         return 0;
 
     gl_context = SDL_GL_CreateContext(window);
@@ -123,22 +128,9 @@ int main(int argc, char **argv)
 
     while (!quit)
     {
-#if 0
-        uint64_t t = SDL_GetTicks64() - starttic;
-
-        if (t - otic > 1000)
-        {
-            t = otic;
-            starttic = SDL_GetTicks64() - t;
-        }
-
-        otic = t;
-
-        t *= 8192;
-        mt32.clock(t);
-#endif
-
+        SDL_LockMutex(mutex);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, lcd_w, lcd_h, 0, GL_RGBA, GL_UNSIGNED_BYTE, mt32.lcd_buffer);
+        SDL_UnlockMutex(mutex);
 
         glViewport(0, 0, w, h);
 
@@ -165,7 +157,7 @@ int main(int argc, char **argv)
                     quit = true;
                     break;
                 case SDL_KEYDOWN:
-                    if (event.key.keysym.scancode == SDL_SCANCODE_MINUS)
+                    if (event.key.keysym.scancode == SDL_SCANCODE_MINUS || event.key.keysym.scancode == SDL_SCANCODE_KP_MINUS)
                     {
                         mt32.knob -= 10;
                         if (mt32.knob < 0)
@@ -173,7 +165,7 @@ int main(int argc, char **argv)
                         printf("knob: %i\n", mt32.knob);
                         break;
                     }
-                    else if (event.key.keysym.scancode == SDL_SCANCODE_EQUALS)
+                    else if (event.key.keysym.scancode == SDL_SCANCODE_EQUALS || event.key.keysym.scancode == SDL_SCANCODE_KP_PLUS)
                     {
                         mt32.knob += 10;
                         if (mt32.knob > 1023)
@@ -186,8 +178,38 @@ int main(int argc, char **argv)
                 {
                     int bit = -1;
 
-                    if (event.key.keysym.scancode >= SDL_SCANCODE_1 && event.key.keysym.scancode <= SDL_SCANCODE_0)
-                        bit = event.key.keysym.scancode - SDL_SCANCODE_1;
+                    switch (event.key.keysym.scancode) {
+                        case SDL_SCANCODE_Q:
+                            bit = MT32_BUTTTON_1;
+                            break;
+                        case SDL_SCANCODE_W:
+                            bit = MT32_BUTTTON_2;
+                            break;
+                        case SDL_SCANCODE_E:
+                            bit = MT32_BUTTTON_3;
+                            break;
+                        case SDL_SCANCODE_R:
+                            bit = MT32_BUTTTON_SOUND_GROUP;
+                            break;
+                        case SDL_SCANCODE_T:
+                            bit = MT32_BUTTTON_VOLUME;
+                            break;
+                        case SDL_SCANCODE_A:
+                            bit = MT32_BUTTTON_4;
+                            break;
+                        case SDL_SCANCODE_S:
+                            bit = MT32_BUTTTON_5;
+                            break;
+                        case SDL_SCANCODE_D:
+                            bit = MT32_BUTTTON_RHYTHM;
+                            break;
+                        case SDL_SCANCODE_F:
+                            bit = MT32_BUTTTON_SOUND;
+                            break;
+                        case SDL_SCANCODE_G:
+                            bit = MT32_BUTTTON_MASTER_VOLUME;
+                            break;
+                    }
 
                     if (bit >= 0)
                     {
@@ -212,6 +234,11 @@ int main(int argc, char **argv)
 
     MIDI_Quit();
 
+    SDL_GL_DeleteContext(gl_context);
+    SDL_DestroyMutex(mutex);
+    SDL_DestroyWindow(window);
+
+    SDL_Quit();
+
     return 0;
 }
-
