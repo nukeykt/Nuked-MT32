@@ -17,6 +17,7 @@
 #include <stdlib.h>
 #include "mt32.h"
 #include "la32.h"
+#include "rv2.h"
 #include "mame/emu.h"
 #include "mame/i8x9x.h"
 
@@ -28,6 +29,7 @@ mt32_t::mt32_t()
     mcu->device_reset();
 
     la32 = new la32_t(this);
+    rv2 = new rv2_t(this);
 
     reg_bank = 0;
     bank_ptr = &rom[0];
@@ -147,6 +149,8 @@ void mt32_t::cpu_write(uint16_t address, uint8_t data)
                     bank_ptr = &rom[(reg_bank & 7) << 14];
                 break;
             case 4:
+                rv2->set_hiaddr((data >> 1) & 3);
+                break;
             case 5:
                 break;
             case 6:
@@ -175,7 +179,10 @@ void mt32_t::cpu_write(uint16_t address, uint8_t data)
                 ga_lcd_queue_cnt = 0;
                 break;
             case 8:
+                rv2->write(1, data << 1);
+                break;
             case 16:
+                rv2->write(0, data << 1);
                 break;
 
             default:

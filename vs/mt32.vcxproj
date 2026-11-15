@@ -135,6 +135,7 @@
     <ClCompile Include="..\mame\mcs96.cpp" />
     <ClCompile Include="..\midi_win32.cpp" />
     <ClCompile Include="..\mt32.cpp" />
+    <ClCompile Include="..\rv2.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\la32.h" />
@@ -146,6 +147,7 @@
     <ClInclude Include="..\mame\mcs96.hxx" />
     <ClInclude Include="..\midi.h" />
     <ClInclude Include="..\mt32.h" />
+    <ClInclude Include="..\rv2.h" />
   </ItemGroup>
   <ItemGroup>
     <Library Include="SDL2-2.30.10\lib\x64\SDL2.lib" />

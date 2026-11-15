@@ -57,6 +57,16 @@ int main(int argc, char **argv)
 
     fclose(f);
 
+    f = fopen("mt32_reverb.bin", "rb");
+
+    if (!f)
+        return 0;
+
+    if (fread(mt32.rvrom, 1, 0x8000, f) != 0x8000)
+        return 0;
+
+    fclose(f);
+
     SDL_Init(SDL_INIT_AUDIO | SDL_INIT_TIMER | SDL_INIT_VIDEO);
 
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);

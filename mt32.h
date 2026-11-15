@@ -22,6 +22,7 @@ class mcs96_device;
 class i8x9x_device;
 class p8098_device;
 class la32_t;
+class rv2_t;
 
 static constexpr int lcd_h = 100;
 static constexpr int lcd_w = 840;
@@ -48,6 +49,7 @@ class mt32_t
     friend class i8x9x_device;
     friend class p8098_device;
     friend class la32_t;
+    friend class rv2_t;
 
 private:
     uint8_t cpu_read(uint16_t address);
@@ -55,6 +57,7 @@ private:
 
     i8x9x_device* mcu;
     la32_t* la32;
+    rv2_t* rv2;
 
     uint8_t ram[0x8000];
     uint8_t reg_bank;
@@ -103,6 +106,7 @@ public:
 
     uint8_t rom[0x20000];
     uint8_t pcm[0x80000];
+    uint8_t rvrom[0x8000];
 
     uint32_t lcd_buffer[lcd_h][lcd_w];
 

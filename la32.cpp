@@ -21,6 +21,7 @@
 #include <string.h>
 #include "la32.h"
 #include "mt32.h"
+#include "rv2.h"
 #include "mame/emu.h"
 #include "mame/i8x9x.h"
 
@@ -296,15 +297,22 @@ static uint32_t calc_pow(uint32_t v)
     return (p << hi) >> 9; // (p << hi) >> 9 (p << 6) >> (15 - hi)
 }
 
+static int16_t output_expand(int16_t sample) {
+    return (sample & 0x8000) | ((sample << 1) & 0x7ffe) | ((sample >> 14) & 1);
+}
+
 void la32_t::clock(uint32_t samples)
 {
     uint64_t cycles = la32_cycles + 256 * samples;
     uint32_t sample_dst = 0;
+
+    mt32->rv2->sync();
+
     while (la32_cycles < cycles)
     {
         int16_t output[8] = {};
 
-        memset(accum, 0, sizeof(accum)); // TEMP
+        memset(accum[oddeven], 0, sizeof(accum[0])); // TEMP
 
         for (uint32_t i = 0; i < 32; i++)
         {
@@ -1168,6 +1176,13 @@ void la32_t::clock(uint32_t samples)
 
             la32_cycles += 8;
 
+            if (i == 4) {
+                mt32->rv2->set_input(output_expand(accum[oddeven ^ 1][6]));
+            } else if (i == 20) {
+                mt32->rv2->set_input(output_expand(accum[oddeven ^ 1][2]));
+            }
+            mt32->rv2->clock(8);
+
             //if (i == 15 || i == 31 || sync_cpu)
             {
                 mt32->mcu->clock((la32_cycles * 375) >> 8);
@@ -1177,10 +1192,11 @@ void la32_t::clock(uint32_t samples)
             }
         }
 
-        int32_t s_l = accum[oddeven][2] + accum[oddeven][3];
-        int32_t s_r = accum[oddeven][6] + accum[oddeven][7];
-        s_l *= 2;
-        s_r *= 2;
+        int16_t reverb[2];
+        mt32->rv2->get_samples(reverb);
+
+        int32_t s_l = output_expand(accum[oddeven][2]) + output_expand(accum[oddeven][3]) + reverb[1] * 17 / 25;
+        int32_t s_r = output_expand(accum[oddeven][6]) + output_expand(accum[oddeven][7]) + reverb[0] * 17 / 25;
 
         if (s_l < -32768)
             s_l = -32768;

@@ -39,6 +39,9 @@
     <ClCompile Include="..\midi_win32.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\rv2.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\lcd_font.h">
@@ -66,6 +69,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\midi.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\rv2.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
