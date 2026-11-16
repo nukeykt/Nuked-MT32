@@ -64,6 +64,7 @@ public:
 #endif
 
 	void serial_w(u8 val);
+	u8 pwm_value() { return pwm_control; }
 
 	virtual u8 i8x9x_p0_mask() const noexcept { return 0xff; }
 	virtual bool i8x9x_has_p1() const noexcept { return true; }
