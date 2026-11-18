@@ -28,6 +28,7 @@ static constexpr int lcd_h = 100;
 static constexpr int lcd_w = 840;
 
 static constexpr uint64_t lcd_delay = 100;
+static constexpr size_t sample_buffer_size = 8192;
 
 enum
 {
@@ -110,7 +111,7 @@ public:
 
     uint32_t lcd_buffer[lcd_h][lcd_w];
 
-    int16_t samples[8192][2];
+    int16_t samples[sample_buffer_size][2];
 
     void clock(uint64_t samples);
     void post_midi(uint8_t byte);

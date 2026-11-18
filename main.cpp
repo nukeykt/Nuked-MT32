@@ -17,23 +17,32 @@
 #include <stdio.h>
 #include <Windows.h>
 #include <gl\GL.h>
-#include <SDL.h>
+#include <SDL3\SDL.h>
 //#include "GL\gl3w.h"
 #include "mt32.h"
 #include "midi.h"
 
 SDL_Window* window;
 SDL_GLContext gl_context;
-SDL_mutex* mutex;
+SDL_Mutex* mutex;
 
 mt32_t mt32;
 
-void mt32_callback(void*, Uint8* stream, int len)
+void SDLCALL mt32_callback(void*, SDL_AudioStream* stream, int additional_amount, int total_amount)
 {
+    int samples = additional_amount / (sizeof(short) * 2);
     SDL_LockMutex(mutex);
-    mt32.clock(len / 4);
+    while (samples > 0)
+    {
+        int produce = samples;
+        if (produce > sample_buffer_size) {
+            produce = sample_buffer_size;
+        }
+        mt32.clock(produce);
+        SDL_PutAudioStreamData(stream, mt32.samples, produce * sizeof(short) * 2);
+        samples -= produce;
+    }
     SDL_UnlockMutex(mutex);
-    memcpy(stream, mt32.samples, len);
 }
 
 int main(int argc, char **argv)
@@ -70,7 +79,7 @@ int main(int argc, char **argv)
 
     fclose(f);
 
-    SDL_Init(SDL_INIT_AUDIO | SDL_INIT_TIMER | SDL_INIT_VIDEO);
+    SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO);
 
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
@@ -78,7 +87,7 @@ int main(int argc, char **argv)
     int w = lcd_w;
     int h = lcd_h;
 
-    window = SDL_CreateWindow("MT-32", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, w, h, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
+    window = SDL_CreateWindow("MT-32", w, h, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
 
     mutex = SDL_CreateMutex();
 
@@ -88,7 +97,7 @@ int main(int argc, char **argv)
     gl_context = SDL_GL_CreateContext(window);
     SDL_GL_MakeCurrent(window, gl_context);
 
-    uint64_t starttic = SDL_GetTicks64();
+    uint64_t starttic = SDL_GetTicks();
     uint64_t otic = 0;
 
     bool quit = false;
@@ -113,18 +122,21 @@ int main(int argc, char **argv)
 
     SDL_AudioSpec spec = {};
     spec.freq = 32000;
-    spec.format = AUDIO_S16;
+    spec.format = SDL_AUDIO_S16;
     spec.channels = 2;
-    spec.samples = 1024;
-    spec.callback = mt32_callback;
 
     SDL_AudioSpec spec_actual = {};
-    auto dev = SDL_OpenAudioDevice(nullptr, 0, &spec, &spec_actual, 0);
+
+    auto dev = SDL_OpenAudioDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &spec);
 
     if (!dev)
         return 0;
+    auto stream = SDL_OpenAudioDeviceStream(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &spec, mt32_callback, nullptr);
 
-    SDL_PauseAudioDevice(dev, 0);
+    SDL_BindAudioStream(dev, stream);
+
+    SDL_ResumeAudioDevice(dev);
+    SDL_ResumeAudioStreamDevice(stream);
 
     while (!quit)
     {
@@ -153,11 +165,11 @@ int main(int argc, char **argv)
         {
             switch (event.type)
             {
-                case SDL_QUIT:
+                case SDL_EVENT_QUIT:
                     quit = true;
                     break;
-                case SDL_KEYDOWN:
-                    if (event.key.keysym.scancode == SDL_SCANCODE_MINUS || event.key.keysym.scancode == SDL_SCANCODE_KP_MINUS)
+                case SDL_EVENT_KEY_DOWN:
+                    if (event.key.scancode == SDL_SCANCODE_MINUS || event.key.scancode == SDL_SCANCODE_KP_MINUS)
                     {
                         mt32.knob -= 10;
                         if (mt32.knob < 0)
@@ -165,7 +177,7 @@ int main(int argc, char **argv)
                         printf("knob: %i\n", mt32.knob);
                         break;
                     }
-                    else if (event.key.keysym.scancode == SDL_SCANCODE_EQUALS || event.key.keysym.scancode == SDL_SCANCODE_KP_PLUS)
+                    else if (event.key.scancode == SDL_SCANCODE_EQUALS || event.key.scancode == SDL_SCANCODE_KP_PLUS)
                     {
                         mt32.knob += 10;
                         if (mt32.knob > 1023)
@@ -174,11 +186,11 @@ int main(int argc, char **argv)
                         break;
                     }
                     __fallthrough;
-                case SDL_KEYUP:
+                case SDL_EVENT_KEY_UP:
                 {
                     int bit = -1;
 
-                    switch (event.key.keysym.scancode) {
+                    switch (event.key.scancode) {
                         case SDL_SCANCODE_Q:
                             bit = MT32_BUTTTON_1;
                             break;
@@ -213,7 +225,7 @@ int main(int argc, char **argv)
 
                     if (bit >= 0)
                     {
-                        if (event.type == SDL_KEYDOWN)
+                        if (event.type == SDL_EVENT_KEY_DOWN)
                             mt32.button |= 1 << bit;
                         else
                             mt32.button &= ~(1 << bit);
@@ -221,12 +233,9 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case SDL_WINDOWEVENT:
-                    if (event.window.event == SDL_WINDOWEVENT_RESIZED)
-                    {
-                        w = event.window.data1;
-                        h = event.window.data2;
-                    }
+                case SDL_EVENT_WINDOW_RESIZED:
+                    w = event.window.data1;
+                    h = event.window.data2;
                     break;
             }
         }
@@ -234,7 +243,7 @@ int main(int argc, char **argv)
 
     MIDI_Quit();
 
-    SDL_GL_DeleteContext(gl_context);
+    SDL_GL_DestroyContext(gl_context);
     SDL_DestroyMutex(mutex);
     SDL_DestroyWindow(window);
 

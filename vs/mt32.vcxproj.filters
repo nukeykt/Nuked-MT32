@@ -76,7 +76,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <Library Include="SDL2-2.30.10\lib\x64\SDL2.lib" />
-    <Library Include="SDL2-2.30.10\lib\x64\SDL2main.lib" />
+    <Library Include="SDL3-3.4.20\lib\x64\SDL3.lib" />
   </ItemGroup>
 </Project>
